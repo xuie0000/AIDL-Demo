@@ -4,8 +4,9 @@
  */
 package com.xuie.zero.aidl_server.service;
 
+import com.xuie.zero.aidl_server.aidl.IClientInterface;
 import com.xuie.zero.aidl_server.aidl.User;
-import com.xuie.zero.aidl_server.aidl.IYFServiceInterface;
+import com.xuie.zero.aidl_server.aidl.IServiceInterface;
 
 import android.app.Service;
 import android.content.Intent;
@@ -26,7 +27,9 @@ public class ZeroService extends Service {
 		return binder;
 	}
 
-	private class ServiceBinder extends IYFServiceInterface.Stub {
+	private IClientInterface listener;
+
+	private class ServiceBinder extends IServiceInterface.Stub {
 		private User user;
 
 		public ServiceBinder() {
@@ -45,7 +48,17 @@ public class ZeroService extends Service {
 
 		@Override
 		public User getUser() throws RemoteException {
+			// server call client
+			if (listener != null) {
+				listener.update();
+			}
+			
 			return user;
+		}
+
+		@Override
+		public void loadAttach(IClientInterface listener) throws RemoteException {
+			ZeroService.this.listener = listener;
 		}
 	}
 

@@ -1,7 +1,8 @@
 package com.xuie.zero;
 
 import com.xuie.zero.aidl_client.R;
-import com.xuie.zero.aidl_server.aidl.IYFServiceInterface;
+import com.xuie.zero.aidl_server.aidl.IClientInterface;
+import com.xuie.zero.aidl_server.aidl.IServiceInterface;
 import com.xuie.zero.aidl_server.aidl.User;
 
 import android.app.Activity;
@@ -22,6 +23,9 @@ public class AidlClientActivity extends Activity {
 	public static final String ACTION_BIND_SERVICE = "com.xuie.zero.aidl_server.service.ZeroService";
 
 	private TextView hello;
+
+	private IServiceInterface mService;
+	private CallBack mCallBack;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -64,7 +68,16 @@ public class AidlClientActivity extends Activity {
 		});
 	}
 
-	private IYFServiceInterface mService;
+	// client callback
+	private class CallBack extends IClientInterface.Stub {
+
+		@Override
+		public void update() throws RemoteException {
+			Log.i(TAG, "call back update...");
+		}
+	}
+
+	// service
 
 	private ServiceConnection serviceConnection = new ServiceConnection() {
 
@@ -77,10 +90,19 @@ public class AidlClientActivity extends Activity {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			Log.i(TAG, "onServiceConnected");
-			mService = IYFServiceInterface.Stub.asInterface(service);
+			mService = IServiceInterface.Stub.asInterface(service);
 			if (mService == null) {
-				showToast("���÷���ӿ�ʧ��");
+				showToast("connected interface fail!");
 				Log.e(TAG, "connected interface fail!");
+				return;
+			}
+
+			// set call back
+			mCallBack = new CallBack();
+			try {
+				mService.loadAttach(mCallBack);
+			} catch (RemoteException e) {
+				e.printStackTrace();
 			}
 		}
 	};
